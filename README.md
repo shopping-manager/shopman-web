@@ -1,0 +1,2 @@
+# shopman-web
+Web frontend
