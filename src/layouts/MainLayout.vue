@@ -12,7 +12,7 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Shop Busy Or Not
         </q-toolbar-title>
 
         <div>Quasar v{{ $q.version }}</div>
