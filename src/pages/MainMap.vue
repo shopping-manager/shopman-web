@@ -3,7 +3,7 @@
     <GmapMap 
       class="gmap"
       :center="center"
-      :zoom="13"
+      :zoom="16"
       ref="map"
 
       :options="mapOptions"
@@ -13,8 +13,9 @@
           @click.native="toggleInfoWindow(m, index)"
           :key="index"
           v-for="(m, index) in markers"
+          class="gmap-marker-wrapper"
         >
-          <div :class="'gmap-marker busy-' + m.busy">
+          <div :class="'gmap-marker busy-' + m.busy_ind + ' '">
 
             <q-icon
               :name="iconMap[m.type]" class="gmap-marker-icon"
@@ -22,11 +23,54 @@
           </div>
         </gmap-custom-marker>
 
-      <GmapInfoWindow  :options="infoOptions" :position="infoWindowPos" :opened="infoWinOpen" @closeclick="infoWinOpen=false">
-        <div v-html="infoContent"></div>
-      </GmapInfoWindow>
-
     </GmapMap>
+
+    <q-page-sticky position="bottom-left" :offset="[18, 18]">
+      <q-btn fab icon="o_refresh" color="accent" @click="fetchData" :loading="loading"/>
+    </q-page-sticky>
+
+    <q-dialog v-model="placeDialogOpen">
+      <q-card class="my-card">
+        <q-img src="https://cdn.quasar.dev/img/chicken-salad.jpg" />
+
+        <q-card-section>
+          <q-btn
+            fab
+            color="primary"
+            icon="place"
+            class="absolute"
+            style="top: 0; right: 12px; transform: translateY(-50%);"
+          />
+
+          <div class="row no-wrap items-center">
+            <div class="col text-h6 ellipsis">
+              {{placeDialogData.name}}
+            </div>
+            <!-- <div class="col-auto text-grey text-caption q-pt-md row no-wrap items-center">
+              <q-icon name="place" />
+              250 ft
+            </div> -->
+          </div>
+
+          <q-rating v-model="placeDialogData.busy_ind" :max="5" color="grey-6" color-selected="primary" size="32px" icon="o_directions_walk" readonly/>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <div class="text-subtitle1">
+            {{placeDialogData.type}}
+          </div>
+          <div class="text-caption text-grey">
+            More info about the place
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+          <q-btn v-close-popup flat color="primary" label="Plan a trip" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
   </div>
 </template>
@@ -37,12 +81,15 @@
   position: absolute
   left: 0
   right: 0
-  top: 0
+  top: 48px
   bottom: 0
 
 .gmap
   width: 100%
   height: 100%
+
+.gmap-marker-wrapper:hover
+  z-index: 2000
 
 .gmap-marker
   height: 40px
@@ -69,10 +116,15 @@
       color: #fff
 
 .gmap-marker:hover
-  transform: scale(1.5)
+  transform: scale(1.5) 
+  z-z-index: 2000
 
 .gmap-marker-icon
   font-size: 24px
+
+.gmap-marker-selected
+  z-index: 1000
+
 
 .busy-5 .gmap-marker-icon
   color: #fff
@@ -89,45 +141,61 @@ export default {
 
   data() {
     return {
-      fallbackCenter: { lat: 46.2033337, lng: 7.3491754 },
-      center: { lat: 46.2033337, lng: 7.3491754 },
-      reportedCenter: { lat: 46.2033337, lng: 7.3491754 },
+      fallbackCenter: { lat: 47.3824551, lng: 8.5244547 },
+      center: { lat: 47.3824551, lng: 8.5244547 },
+      reportedCenter: { lat: 47.3824551, lng: 8.5244547 },
       
+      loading: false,
+
       iconMap : {
         'supermarket' : 'o_shopping_cart',
         'convenience' : 'o_storefront',
         'pharmacy' : 'o_local_pharmacy',
       },
+      
+      attendanceBarColors: [ 'light-green-3', 'light-green-6', 'green', 'green-9', 'green-10' ],
 
       markers: [
         {
           position: {lat: 46.2033337, lng: 7.3491754},
-          busy: 1,
+          busy: 15,
+          busy_ind: 1,
           type: 'supermarket',
         },
         {
           position: {lat: 46.2033337, lng: 7.3001754},
-          busy: 2,
+          busy: 35,
+          busy_ind: 2,
           type: 'pharmacy',
         },
         {
           position: {lat: 46.2333337, lng: 7.2801754},
-          busy: 3,
+          busy: 55,
+          busy_ind: 3,
           type: 'convenience',
         },
         {
           position: {lat: 46.2433337, lng: 7.3101754},
-          busy: 4,
+          busy: 75,
+          busy_ind: 4,
           type: 'supermarket',
         },
         {
           position: {lat: 46.2433337, lng: 7.3601754},
-          busy: 5,
+          busy: 95,
+          busy_ind: 5,
           type: 'supermarket',
         },
 
 
       ],
+
+      currentMarker: null,
+      placeDialogOpen: false,
+      placeDialogData: {
+        attendance: 0,
+        name: "",
+      },
 
 
       places: [],
@@ -147,6 +215,7 @@ export default {
       infoWindowPos: null,
       infoWinOpen: false,
       currentMidx: null,
+      currentMarkerOpen: -1,
 
       //optional: offset infowindow so it visually sits nicely on top of our marker
       infoOptions: {
@@ -163,31 +232,44 @@ export default {
 
   mounted() {
     this.geolocate()
+    //this.fetchData()
   },
 
   methods: {
 
+    fetchData : async function() {
+      let url = process.env.API_SERVER + "/stores"
+      this.loading = true
+      try {
+        let response = await this.$axios.get(url)
+        this.loading = false
+        let data = response.data
+        this.markers.length = 0
+        data.map((val, idx, num) => {
+          this.markers.push({
+            position: {
+              lat: val.lat,
+              lng: val.long
+            },
+            busy: val.busy,
+            busy_ind: Math.floor(val.busy / 20) + 1,
+            type: val.type,
+            name: val.name,
+            g_url: val.url,
+          })
+        })
+      }
+      catch (error) {
+        this.loading = false
+        console.error(error)
+      }
+    },
+
     toggleInfoWindow: function(marker, idx) {
 
-      console.log("Set I window " + idx + " / " + marker)
-
-      this.infoWindowPos = marker.position;
-
-      //check if its the same marker that was selected if yes toggle
-      if (this.currentMidx == idx) {
-        this.infoWinOpen = !this.infoWinOpen;
-      }
-
-      //if different marker set infowindow to open and reset current marker index
-      else {
-        this.infoWinOpen = true;
-        this.currentMidx = idx;
-      }
-
-      if (this.infoWinOpen) {
-          // Retrieve information
-          this.infoContent = this.$t('Content');
-      }
+      this.currentMarker = marker
+      this.placeDialogData = marker
+      this.placeDialogOpen = true
 
     },
 
