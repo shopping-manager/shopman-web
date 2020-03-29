@@ -62,10 +62,16 @@
           <div class="text-subtitle1">
             {{placeDialogData.type}}
           </div>
-          <div class="text-caption text-grey">
-            More info about the place
-          </div>
+          <!-- <div class="text-caption text-grey">
+            Description of the place
+          </div> -->
         </q-card-section>
+        <q-card-section class="q-pt-none missing-items-section" v-if="placeDialogData.missing_supply.length > 0">
+          <p class="q-mb-none q-mt-xs">The following was reported missing: </p>
+          <q-chip v-for="(item, kb) in placeDialogData.missing_supply" :key="kb" icon="o_local_pizza">{{item.name}}</q-chip>
+
+        </q-card-section>
+        
 
         <q-separator />
 
@@ -79,6 +85,8 @@
 </template>
 
 <style lang="sass">
+.missing-items-section
+  background-color: $warning
 
 .gmap-wrapper
   position: absolute
@@ -127,7 +135,6 @@
 
 .gmap-marker-selected
   z-index: 1000
-
 
 .busy-5 .gmap-marker-icon
   color: #fff
@@ -198,6 +205,7 @@ export default {
       placeDialogData: {
         attendance: 0,
         name: "",
+        missing_supply: [],
       },
 
 
@@ -349,6 +357,13 @@ export default {
             type: val.type,
             name: val.name,
             g_url: val.url,
+            missing_supply: [
+              {name: 'Toilet paper'},
+              {name: 'Pasta'},
+              {name: 'Rice'},
+              {name: 'Cheese'},
+              {name: 'Tomato sauce'},
+            ]
           })
         })
       }
