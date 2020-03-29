@@ -40,7 +40,7 @@
           basic
           class="card-image"
         >
-          <div class="absolute-bottom text-subtitle2 text-center">
+          <div class="absolute-bottom card-image-cap text-subtitle2 text-center">
             {{item.name}}
           </div>
         </q-img>
@@ -76,6 +76,10 @@
 .card-image
   opacity: 85%
   transition: opacity 0.1s ease-in-out
+
+.q-img__content .card-image-cap
+  font-weight: 400
+  padding: 4px
 
 .item-card:hover .card-image
   opacity: 100%
@@ -132,6 +136,7 @@ export default {
             {name:'Tomato sauce'},
             {name:'Biscuits'},
             {name:'Chocolate'},
+            {name:'Cooking oil'},
             {name:'Flour'},
             {name:'Sugar'},
             {name:'Cheese'},

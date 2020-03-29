@@ -227,7 +227,7 @@ export default {
         1 : 'Clear',
         2 : 'A bit busy',
         3 : 'Busy',
-        4 : 'You may wait outside',
+        4 : 'Possible waiting line outside',
         5 : 'Crowded - expect to wait',
       },
 
