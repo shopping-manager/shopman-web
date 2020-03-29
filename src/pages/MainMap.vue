@@ -28,6 +28,9 @@
     <q-page-sticky position="bottom-left" :offset="[18, 18]">
       <q-btn fab icon="o_refresh" color="accent" @click="fetchData" :loading="loading"/>
     </q-page-sticky>
+    <q-page-sticky position="bottom-left" :offset="[80, 18]">
+      <q-btn fab icon="o_list" color="accent" to="/shoppinglist"/>
+    </q-page-sticky>
 
     <q-dialog v-model="placeDialogOpen">
       <q-card class="my-card">
