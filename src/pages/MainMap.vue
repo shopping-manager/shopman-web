@@ -86,7 +86,7 @@
 
         <q-card-actions align="right">
           <q-btn v-close-popup flat color="white" label="Report shortage" />
-        <q-btn flat round color="white" icon="o_feedback" />
+        <q-btn flat round color="white" icon="o_feedback" to="/reportstoreproblem"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
