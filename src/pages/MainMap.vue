@@ -34,16 +34,16 @@
 
     <q-dialog v-model="placeDialogOpen">
       <q-card class="my-card">
-        <q-img src="https://cdn.quasar.dev/img/chicken-salad.jpg" />
+        <!-- <q-img src="https://cdn.quasar.dev/img/chicken-salad.jpg" /> -->
 
         <q-card-section>
-          <q-btn
+          <!-- <q-btn
             fab
             color="primary"
             icon="place"
             class="absolute"
             style="top: 0; right: 12px; transform: translateY(-50%);"
-          />
+          /> -->
 
           <div class="row no-wrap items-center">
             <div class="col text-h6 ellipsis">
@@ -66,10 +66,15 @@
             Description of the place
           </div> -->
         </q-card-section>
+
+        <q-card-section class="q-pt-none" v-if="placeDialogData.present_supply.length > 0">
+          <p class="q-mb-none q-mt-xs">Available supply: </p>
+          <q-chip v-for="(item, kb) in placeDialogData.present_supply" :key="kb" icon="o_local_pizza">{{item.name}}</q-chip>
+        </q-card-section>
+
         <q-card-section class="q-pt-none missing-items-section" v-if="placeDialogData.missing_supply.length > 0">
           <p class="q-mb-none q-mt-xs">The following was reported missing: </p>
-          <q-chip v-for="(item, kb) in placeDialogData.missing_supply" :key="kb" icon="o_local_pizza">{{item.name}}</q-chip>
-
+          <q-chip v-for="(item, kb) in placeDialogData.missing_supply" :key="kb" icon="o_local_pizza"><span class="item-missing">{{item.name}}</span></q-chip>
         </q-card-section>
         
 
@@ -87,6 +92,10 @@
 <style lang="sass">
 .missing-items-section
   background-color: $warning
+
+.item-missing
+  text-decoration-line: line-through
+  text-decoration-color: red
 
 .gmap-wrapper
   position: absolute
@@ -162,8 +171,6 @@ export default {
         'convenience' : 'o_storefront',
         'pharmacy' : 'o_local_pharmacy',
       },
-      
-      attendanceBarColors: [ 'light-green-3', 'light-green-6', 'green', 'green-9', 'green-10' ],
 
       markers: [
         {
@@ -206,7 +213,17 @@ export default {
         attendance: 0,
         name: "",
         missing_supply: [],
+        present_supply:[],
       },
+
+      essentialItemRef: [
+        {name: "Toilet paper"},
+        {name: "Bread"},
+        {name: "Produce"},
+        {name: "Fruit"},
+        {name: "Pasta"},
+        {name: "Milk"},
+      ],
 
 
       places: [],
@@ -347,6 +364,31 @@ export default {
         let data = response.data
         this.markers.length = 0
         data.map((val, idx, num) => {
+
+          // Compute present supply
+
+          let presentItems = [...this.essentialItemRef]
+          let missingItems = [
+              {name: 'Toilet paper'},
+              {name: 'Pasta'},
+              {name: 'Rice'},
+              {name: 'Cheese'},
+              {name: 'Tomato sauce'},
+            ]
+
+          // Randomize missing items
+          missingItems = missingItems.filter(missingItem => {
+            return Math.random() > 0.8
+          })
+          
+          // Update present items
+          missingItems.map(missingItem => {
+            console.log(presentItems)
+            presentItems = presentItems.filter(item => {
+              return item.name != missingItem.name
+            })
+          })
+
           this.markers.push({
             position: {
               lat: val.lat,
@@ -357,13 +399,8 @@ export default {
             type: val.type,
             name: val.name,
             g_url: val.url,
-            missing_supply: [
-              {name: 'Toilet paper'},
-              {name: 'Pasta'},
-              {name: 'Rice'},
-              {name: 'Cheese'},
-              {name: 'Tomato sauce'},
-            ]
+            missing_supply: missingItems,
+            present_supply: presentItems,
           })
         })
       }
