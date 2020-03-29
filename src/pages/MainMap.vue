@@ -33,7 +33,7 @@
     </q-page-sticky>
 
     <q-dialog v-model="placeDialogOpen">
-      <q-card class="my-card">
+      <q-card :class="'store-card busy-' + placeDialogData.busy_ind">
         <!-- <q-img src="https://cdn.quasar.dev/img/chicken-salad.jpg" /> -->
 
         <q-card-section>
@@ -46,7 +46,7 @@
           /> -->
 
           <div class="row no-wrap items-center">
-            <div class="col text-h6 ellipsis">
+            <div class="col text-h6 ellipsis" style="text-align:center">
               {{placeDialogData.name}}
             </div>
             <!-- <div class="col-auto text-grey text-caption q-pt-md row no-wrap items-center">
@@ -54,13 +54,17 @@
               250 ft
             </div> -->
           </div>
-
-          <q-rating v-model="placeDialogData.busy_ind" :max="5" color="grey-6" color-selected="primary" size="32px" icon="o_directions_walk" readonly/>
+          
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <div class="text-subtitle1">
-            {{placeDialogData.type}}
+
+
+          <div style="text-align:center">
+            <q-rating v-model="placeDialogData.busy_ind" :max="5" color="white" color-selected="white" size="32px" style="text-align:center" icon="o_directions_walk" readonly/>
+          </div>
+          <div class="text-subtitle1 store-card-busystatus q-mt-xs">
+            {{busyTexts[placeDialogData.busy_ind]}}
           </div>
           <!-- <div class="text-caption text-grey">
             Description of the place
@@ -74,14 +78,15 @@
 
         <q-card-section class="q-pt-none missing-items-section" v-if="placeDialogData.missing_supply.length > 0">
           <p class="q-mb-none q-mt-xs">The following was reported missing: </p>
-          <q-chip v-for="(item, kb) in placeDialogData.missing_supply" :key="kb" icon="o_local_pizza"><span class="item-missing">{{item.name}}</span></q-chip>
+          <q-chip v-for="(item, kb) in placeDialogData.missing_supply" :key="kb" outline color="white" icon="o_local_pizza"><span class="item-missing">{{item.name}}</span></q-chip>
         </q-card-section>
         
 
         <q-separator />
 
         <q-card-actions align="right">
-          <q-btn v-close-popup flat color="primary" label="Plan a trip" />
+          <q-btn v-close-popup flat color="white" label="Report shortage" />
+        <q-btn flat round color="white" icon="o_feedback" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -90,8 +95,30 @@
 </template>
 
 <style lang="sass">
-.missing-items-section
-  background-color: $warning
+
+
+.store-card
+  color: white
+  &.busy-1
+    background-color: $color-busy-1
+  &.busy-2
+    background-color: $color-busy-2
+  &.busy-3
+    background-color: $color-busy-3
+  &.busy-4
+    background-color: $color-busy-4
+  &.busy-5
+    background-color: $color-busy-5
+  .q-rating__icon
+    text-shadow: none
+  .store-card-busystatus
+    text-align: center
+    text-transform: uppercase
+    font-weight: 400
+    letter-spacing: 4px
+
+
+//.missing-items-section  
 
 .item-missing
   text-decoration-line: line-through
@@ -112,10 +139,10 @@
   z-index: 2000
 
 .gmap-marker
-  height: 40px
-  width: 40px
+  height: 36px
+  width: 36px
   background-color: #999
-  border-radius: 10px
+  border-radius: 5px
   cursor: pointer
   display: flex
   justify-content: center
@@ -123,21 +150,34 @@
   transition: 0.1s ease-in-out
 
   &.busy-1
-    background-color: #3BDF04
-  &.busy-2
-    background-color: #B8F402
-  &.busy-3
-    background-color: #FFFF00
-  &.busy-4
-    background-color: #FFB22B
-  &.busy-5
-    background-color: #FF6A6A
-    .gmap-marker.icon
+    background-color: $color-busy-1
+    .gmap-marker-icon
       color: #fff
+      opacity: 0.8
+  &.busy-2
+    background-color: $color-busy-2
+    .gmap-marker-icon
+      color: #fff
+      opacity: 0.8
+  &.busy-3
+    background-color: $color-busy-3
+    .gmap-marker-icon
+      color: #fff
+      opacity: 0.8
+  &.busy-4
+    background-color: $color-busy-4
+    .gmap-marker-icon
+      color: #fff
+      opacity: 0.8
+  &.busy-5
+    background-color: $color-busy-5
+    .gmap-marker-icon
+      color: #fff
+      opacity: 0.8
 
 .gmap-marker:hover
   transform: scale(1.5) 
-  z-z-index: 2000
+  z-index: 2000
 
 .gmap-marker-icon
   font-size: 24px
@@ -160,6 +200,9 @@ export default {
 
   data() {
     return {
+
+      dbgRandomBusy: true,
+
       fallbackCenter: { lat: 47.3824551, lng: 8.5244547 },
       center: { lat: 47.3824551, lng: 8.5244547 },
       reportedCenter: { lat: 47.3824551, lng: 8.5244547 },
@@ -170,6 +213,14 @@ export default {
         'supermarket' : 'o_shopping_cart',
         'convenience' : 'o_storefront',
         'pharmacy' : 'o_local_pharmacy',
+      },
+
+      busyTexts: {
+        1 : 'Clear',
+        2 : 'A bit busy',
+        3 : 'Busy',
+        4 : 'You may wait outside',
+        5 : 'Crowded - expect to wait',
       },
 
       markers: [
@@ -395,7 +446,7 @@ export default {
               lng: val.long
             },
             busy: val.busy,
-            busy_ind: Math.floor(val.busy / 20) + 1,
+            busy_ind: this.dbgRandomBusy ? Math.floor(Math.random() * 5) + 1 : Math.floor(val.busy / 20) + 1,
             type: val.type,
             name: val.name,
             g_url: val.url,
