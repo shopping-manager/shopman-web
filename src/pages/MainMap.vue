@@ -72,20 +72,25 @@
         </q-card-section>
 
         <q-card-section class="q-pt-none" v-if="placeDialogData.present_supply.length > 0">
-          <p class="q-mb-none q-mt-xs">Available supply: </p>
-          <q-chip v-for="(item, kb) in placeDialogData.present_supply" :key="kb" icon="o_local_pizza">{{item.name}}</q-chip>
+          <p class="q-mb-none q-mt-xs" style="text-align: center">Available supply: </p>
+          <div style="text-align:center">
+          <q-chip v-for="(item, kb) in placeDialogData.present_supply" :key="kb" text-color="white" icon="o_local_pizza" class="available-item-chip">{{item.name}}</q-chip>
+          </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none missing-items-section" v-if="placeDialogData.missing_supply.length > 0">
-          <p class="q-mb-none q-mt-xs">The following was reported missing: </p>
+          <p class="q-mb-none q-mt-xs" style="text-align: center">The following was reported missing: </p>
+
+          <div style="text-align:center">
           <q-chip v-for="(item, kb) in placeDialogData.missing_supply" :key="kb" outline color="white" icon="o_local_pizza"><span class="item-missing">{{item.name}}</span></q-chip>
+          </div>
         </q-card-section>
         
 
         <q-separator />
 
         <q-card-actions align="right">
-          <q-btn v-close-popup flat color="white" label="Report shortage" />
+          <q-btn v-close-popup flat color="white" label="Report shortage" to="/reportshortage"/>
         <q-btn flat round color="white" icon="o_feedback" to="/reportstoreproblem"/>
         </q-card-actions>
       </q-card>
@@ -122,7 +127,10 @@
 
 .item-missing
   text-decoration-line: line-through
-  text-decoration-color: red
+  //text-decoration-color: red
+
+.available-item-chip
+  background-color: rgba(255, 255, 255, 0.25)
 
 .gmap-wrapper
   position: absolute
