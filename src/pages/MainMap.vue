@@ -409,7 +409,7 @@ export default {
 
   mounted() {
     this.geolocate()
-    //this.fetchData()
+    this.fetchData()
   },
 
   methods: {
