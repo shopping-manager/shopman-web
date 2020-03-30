@@ -43,12 +43,6 @@ export default {
     return {
       newItemToAdd: "",
       listItems: [
-        {name:'Bread', checked:true},
-        {name:'Butter', checked:false},
-        {name:'Milk', checked:false},
-        {name:'Detergent', checked:false},
-        {name:'Pasta', checked:false},
-        {name:'Toilet paper', checked:false},
       ]
     }
   },
